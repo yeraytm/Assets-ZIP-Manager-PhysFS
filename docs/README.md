@@ -28,7 +28,14 @@ The operating system is in charge of providing abstraction to access the filesys
 
 - Directory (or Folder): structures that allow the user to group files into collections. These collections can be made of a table of contents that contains filenames like in a Unix filesystem.
 
-### Filesystem APIs in Games
+# Market Study
+We can find several different file system APIs in the market that are being used in operating systems:
+
+- Linux: implements a kernel-level API which means that the lowest-level instructions from the OS not only provide interfaces to develop the filesystems but it is where the filesystem code and logic is. There was the MS-DOS operating system developed by Microsoft that used this type of API too.
+
+- Windows NT: the common Microsoft Windows OS that is present in the majority of personal computers uses a driver-based API, meaning that the filesystem code and logic doesn’t reside in the kernel but it is totally external. This allows Microsoft to keep their kernel closed to the public and modify the Windows filesystem via online.
+
+## Filesystem APIs in Games
 In video games, the filesystem API is in charge of loading the game assets stored on disk, like sprites, music, sound effects, fonts etc. To hardcode the paths for each asset will break the portability to other platforms as many games would need; so the proper way to manage multiple platforms is to use a virtual filesystem that mounts our assets folder that gets rid of any working directories issues.
 
 The main benefit is that the game will load files from local directories without needing to specify each time the disk where it is. This removes any operating system differences and limitations from the game as dependencies, in trade of the virtual filesystem dependency.
@@ -37,10 +44,21 @@ The other great benefit is the run-time efficiency when using a filesystem API b
 
 As an extra feature, the virtual filesystem can handle duplicate aliases for a file, so changing the extension or instead of modifying a file, adding another one entirely that substitutes it is easier to do. This allows the developer to introduce patches to the game without deleting the old files in a faster way; nevertheless, bigger patches may require to modify the old files to avoid long downloads for players.
 
-# Market Study
+As an example of a proprietary filesystem in a game we have Doom. From Wolfenstein 3D (1992) they introduced the WAD files that stands for “Where’s All the Data” that the first Doom fully implemented. This file format is spreadly known in the industry because it gives flexibility not only for developers but also users, to create patches, mods and increase the security and more importantly, the performance. This is due to how the IdSoftware game used their filesystem, because it used few bigger binary files instead of smaller ones.
+
+The Doom’s file format was used to release their assets files in the final version of the game, avoiding also that the user could manipulate them easily. However, this format can be kind of read by a Hex editor. The WAD file includes a file header containing a pointer to a series of directories at the end of the file and those directories point to where their data starts in the file. 
 
 # Selected Approach
+For this research, the chosen approach is done using the PhysicsFS API, the library that provides abstract access to archives. It was intended to use in video games and as its creator Ryan C. Gordon mentions; it was partially inspired by the Quake’s 3 file subsystem where he worked. 
+
+As we are intended to see in this research, we will focus only on reading and loading assets’ files into our game. PhysicsFS or PhysFS as his creator calls it, implements a tool for reading using a search path specified by the programmer with the archives and directories of the assets. So it becomes a “transparent hierarchical file system” that allows us to access ZIP files in order to use the benefits of using a virtual filesystem as mentioned before. This API gets rid of the program accessing outside our determined archive as well as ‘ . ’ and ‘ .. ’ commands.  You can think of this as a filesystem within a filesystem. If (on Windows) you were to set the writing directory to "C:\MyGame\MyWritingDirectory", then no PHYSFS calls could touch anything above this directory, including the "C:\MyGame" and "C:\" directories. This gives an abstraction across all platforms. Specifying a file in this way is termed "platform-independent notation".
 
 # Possible Improvements
+To improve this implementation, I have mainly found two ways:
+
+As PhysFS is focused on thread security, because it reads one file at a time, it increases loading times. As the game engine is capable of managing different thread of our CPU, with PhysFS only executing one operation at the same time makes it all slow down. However, we can identify this problem in more advanced and bigger-scale games. 
+This improvement was done by Mathieu Ropert, and he first worked to integrate PhysFS using C++ in his engine and use macros and gotos instead of the present RAII accessors. He also uses different mount points that are being managed by each thread.
+
+The second improvement could be to add more encryption to the files using Crypto++ and then coding the decryption internally in our program. This will help to have better secured PAK files. The ZipStorage class from Digital Rune is intended to access package files that use the ZIP format and  manage the compression and encryption.
 
 # Documentation and References
