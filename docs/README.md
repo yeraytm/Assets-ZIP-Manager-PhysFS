@@ -66,16 +66,16 @@ To use the PhysicsFS API we need to build it from source. My choice was to use C
 3. Configure the process for Win32 and Visual Studio 19.
 
 4. Discard all the files in screen except the PHYSFS_ARCHIVE_ZIP and the PHYSFS_BUILD_SHARED. Here my destination folder is called PHYSFS Research:
-![](docs/images/cmake.png)
+![CMake](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/cmake.png)
 
 5. Go to the folder where CMake has built a Visual Studio Solution and open it:
-![](docs/images/cmake_solution.png)
+![CMake Solution](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/cmake_solution.png)
 
 6. Now you just have to build in Release mode:
-![](docs/images/physfs_build.png)
+![PhysFS Build](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/physfs_build.png)
 
 7. Finally, you will find the needed dll and lib of PhysFS in the Release Folder of the Solution:
-![](docs/images/physfs_release.png)
+![PhysFS Release](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/physfs_release.png)
 
 ## Implementation
 As a result, in this project I have implemented a Module called AssetsManager that allows us to load all of our assets from the ZIP file. There are two load methods, the `LoadAsset()` to load assets like textures, music or sound effects, that implements an adaptation of PHYSFS to directly pass to SDL as it is more handy and optimised. And a `LoadXML()` method for any XML file that we may need to use in our game, such as: saved game information, entities positions etc.
@@ -94,7 +94,7 @@ size_t LoadXML(const char* path, char** buffer);
 
 As a try to encryption, the archive that contains and compresses the assets instead of being a ZIP file, I have renamed it to Assets.pak to avoid all the users that don't know about PAK files to change any of our games assets. This can be reverted by changing again the extension to .zip.
 
-![](docs/images/assets_archive.jpg)
+![Folder Tree](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/assets_archive.jpg)
 
 Following the PhysicsFS documentation and some information to load from memory, here they are the used functions and code:
 
