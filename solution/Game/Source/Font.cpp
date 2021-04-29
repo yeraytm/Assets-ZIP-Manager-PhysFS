@@ -12,14 +12,13 @@ Font::Font(const char* rtpFontFile)
 {
 	fontLoaded = false;
 
-	// ----------------------------------------------------------------------------
+	// (SOLVED) TODO 9: Load a Font XML document using a buffer. Get the size and load the XML document. Then, release the buffer
 	char* buffer = nullptr;
 	pugi::xml_document xmlDocFontAtlas;
 	size_t size = app->assetsManager->LoadXML(rtpFontFile, &buffer);
 
 	pugi::xml_parse_result result = xmlDocFontAtlas.load_buffer(buffer, size);
 	RELEASE_ARRAY(buffer);
-	// ----------------------------------------------------------------------------
 
 	//pugi::xml_parse_result result = xmlDocFontAtlas.load_file(rtpFontFile);
 

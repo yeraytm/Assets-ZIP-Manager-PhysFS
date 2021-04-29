@@ -35,6 +35,7 @@ public:
 
 private:
 	SDL_Texture* img;
+	int sFx;
 
 	Font* font;
 };

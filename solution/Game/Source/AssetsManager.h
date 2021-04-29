@@ -20,8 +20,8 @@ public:
 	// Called before quitting
 	bool Cleanup();
 
-	SDL_RWops* LoadAsset(const char* fileName);
-	size_t LoadXML(const char* fileName, char** buffer);
+	SDL_RWops* LoadAsset(const char* path);
+	size_t LoadXML(const char* path, char** buffer);
 
 private:
 

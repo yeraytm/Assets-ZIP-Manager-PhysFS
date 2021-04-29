@@ -33,8 +33,11 @@ bool Scene::Awake(pugi::xml_node& config)
 // Called before the first frame
 bool Scene::Start()
 {
-	img = app->tex->Load("Textures/test.png");
+	// TODO: Loading of the assets
+	img = app->tex->Load("Textures/asteroid.png");
+
 	app->audio->PlayMusic("Audio/Music/music_spy.ogg");
+	sFx = app->audio->LoadFx("Audio/Fx/confirmation.wav");
 	font = new Font("Fonts/showg.xml");
 
 	return true;
@@ -49,14 +52,15 @@ bool Scene::PreUpdate()
 // Called each loop iteration
 bool Scene::Update(float dt)
 {
-	//if (app->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
-	//{
+	// TODO: Displaying and playing the results
+	if (app->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
+	{
+		app->audio->PlayFx(sFx);
+	}
 
-	//}
+	app->render->DrawText(font, "Press SPACE to play a sound effect", 10, 50, 40, 5, { 255,255,255,255 });
 
-	app->render->DrawText(font, "Hello World", 0, 0, 40, 5, { 255,255,255,255 });
-
-	app->render->DrawTexture(img, 380, 100);
+	app->render->DrawTexture(img, 240, 0);
 
 	return true;
 }
