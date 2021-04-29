@@ -53,12 +53,209 @@ For this research, the chosen approach is done using the PhysicsFS API, the libr
 
 As we are intended to see in this research, we will focus only on reading and loading assets’ files into our game. PhysicsFS or PhysFS as his creator calls it, implements a tool for reading using a search path specified by the programmer with the archives and directories of the assets. So it becomes a “transparent hierarchical file system” that allows us to access ZIP files in order to use the benefits of using a virtual filesystem as mentioned before. This API gets rid of the program accessing outside our determined archive as well as ‘ . ’ and ‘ .. ’ commands.  You can think of this as a filesystem within a filesystem. If (on Windows) you were to set the writing directory to "C:\MyGame\MyWritingDirectory", then no PHYSFS calls could touch anything above this directory, including the "C:\MyGame" and "C:\" directories. This gives an abstraction across all platforms. Specifying a file in this way is termed "platform-independent notation".
 
+To use the PhysicsFS API we need to build it from source. My choice was to use CMake. You don't need to build it on your own as you can find my Visual Studio Solution with the corresponding headers and dll. Here is a simple guide to follow:
+
+1. Download the latest PhysFS release and CMake from their official webpage and create a personal folder to save the CMake files that will be generated.
+
+2. In CMake, select the PhysFS release folder you just have downloaded as the source code and select your destination folder you have created as where to build the binaries.
+
+3. Configure the process for Win32 and Visual Studio 19.
+
+4. Discard all the files in screen except the PHYSFS_ARCHIVE_ZIP and the PHYSFS_BUILD_SHARED. Here my destination folder is called PHYSFS Research:
+![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/cmake.png)
+
+5. Go to the folder where CMake has built a Visual Studio Solution and open it:
+![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/cmake_solution.png)
+
+6. Now you just have to build in Release mode:
+![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/physfs_build.png)
+
+7. Finally, you will find the needed dll and lib of PhysFS in the Release Folder of the Solution:
+![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/physfs_release.png)
+
+## Implementation
+As a result, in this project I have implemented a Module called AssetsManager that allows us to load all of our assets from the ZIP file. There are two load methods, the `LoadAsset()` to load assets like textures, music or sound effects, that implements an adaptation of PHYSFS to directly pass to SDL as it is more handy and optimised. And a `LoadXML()` method for any XML file that we may need to use in our game, such as: saved game information, entities positions etc.
+
+The method used to load our assets needs the path of the asset from the ZIP file, so it will be something like: Textures/image.png or Audio/Fx/jump.wav
+It returns a SDL_RWops pointer structure to be able to load our asset from SDL in the Textures or Audio modules.
+```cpp
+	SDL_RWops* LoadAsset(const char* path);
+```
+
+The method used to load an XML file is a bit more complex. It needs as a parameter a path (like in `LoadAsset()`) and a buffer that must be able to be modified, so we need a [double pointer](https://stackoverflow.com/questions/20589045/modify-buffer-passed-as-a-pointer) to read the XML file and save the data into the buffer. 
+It returns the size of the file in bytes.
+```cpp
+		size_t LoadXML(const char* path, char** buffer);
+```
+
+As a try to encryption, the archive that contains and compresses the assets instead of being a ZIP file, I have renamed it to Assets.pak to avoid all the users that don't know about PAK files to change any of our games assets. This can be reverted by changing again the extension to .zip.
+
+![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/assets_archive.jpg0
+
+Following the PhysicsFS documentation and some information to load from memory, here they are the used functions and code:
+
+- `PHYSFS_init()`: Initialize the PhysicsFS library. This must be called before any other PhysicsFS function. The parameter can be NULL.
+- `PHYSFS_mount()`: Add an archive or directory to the search path. Should receive the naem and extension of our Assets archive, a mountPoint that we can leave on NULL and the append to search path integer that can be 1.
+- `PHYSFS_exists()`: Determine if a file exists in the search path.
+- `PHYSFS_openRead()`: Open a file for reading, in platform-independent notation. The search path is checked one at a time until a matching file is found. It returns a PHYSFS_file filehandle that must be saved into a variable.
+- `PHYSFSRWOPS_openRead()`: Open a platform-independent filename for reading, and make it accessible via an SDL_RWops structure. The file will be closed in PhysicsFS when the RWops is closed.
+- `PHYSFS_eof()`: Check for end-of-file state on a PhysicsFS filehandle.
+- `PHYSFS_fileLength()`: Get total length of a file in bytes.
+- `PHYSFS_readBytes()`:  Read bytes from a PhysicsFS filehandle. The file must be opened for reading. The buffer parameter should be passed by reference.
+- `PHYSFS_close()`: Close a PhysicsFS filehandle. It must be done every time the filehandle has been opened.
+- `PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())`: In case we may need to LOG any error from PhysFS.
+
+In order to load the assets from the SDL_RWops structure we will need specific SDL function that are similar to the ones we have been using, but the parameters are our SDL_RWops pointer and the free source that can be 0. The SDL_WRops is a structure that provides an abstract interface to stream I/O and allows us to use SDL with PhysFS.
+
+- To load a texture from SDL_RWops to SDL_Surface: `IMG_Load_RW()`
+- To load music from SDL_RWops to Mix_Music: `Mix_LoadMUS_RW()`
+- To load a sound Fx from SDL_RWops to Mix_Chunk: `Mix_LoadWAV_RW()`
+
+After loading a SDL_Texture or Mix_Chunk we will need to close and free the allocated SDL_RWops structure using `SDL_RWclose(SDL_RWops*)` that does it all.
+
+In order to load XML documents we will need to declare a buffer pointer where we want to load the file and pass it to the `LoadXML()` method by reference. From what the method returns (the size of the files in bytes) we will need to use the `load_buffer()` method from inside of the `xml_document` passing a copy of the buffer and its size. After having loaded the file, we can free the buffer array.
+
+# Exercises
+
+TODO 0: Initialize the PhysFS API and mount the Assets file, return false to check if there is any error
+```cpp
+	if (PHYSFS_init(NULL) == 0)
+	{
+		LOG("ERROR INITIALIZING PHYSFS LIBRARY: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return false;
+	}
+
+	if (PHYSFS_mount("Assets.pak", NULL, 1) == 0)
+	{
+		LOG("ERROR ADDING ARCHIVE TO SEARCH PATH: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return false;
+	}
+```
+
+TODO 1: Check if the file intended to load actually exists in the Assets ZIP
+```cpp
+	if (PHYSFS_exists(path) == 0)
+	{
+		LOG("ERROR - FILE %s DOESNT EXIST IN THE SEARCH PATH: %s\n", path, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return NULL;
+	}
+```
+
+TODO 2: Open the file for reading using the RWops accessible structure by PhysFS, and save that structure for the function to return.
+```cpp
+	SDL_RWops* ret = PHYSFSRWOPS_openRead(path);
+
+	if (ret == NULL)
+	{
+		LOG("ERROR OPENING FILE %s FOR READING: %s\n", path, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return NULL;
+	}
+
+	return ret;
+```
+
+TODO 3: Repeat what you have done in the LoadAsset() method but instead of using a RWops structure, use a PHYSFS_file
+```cpp
+if (PHYSFS_exists(path) == 0)
+		LOG("ERROR - FILE %s DOESNT EXIST IN THE SEARCH PATH: %s\n", path, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+
+	PHYSFS_file* file = PHYSFS_openRead(path);
+	if (file == NULL)
+		LOG("ERROR OPENING FILE %s FOR READING: %s\n", path, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+```
+
+TODO 4: Check if PhysFS has not ended to read the file and obtain the size of the file in bytes
+```cpp
+if (!PHYSFS_eof(file))
+	{
+		PHYSFS_sint64 size = PHYSFS_fileLength(file);
+
+```
+
+TODO 5: Allocate enough memory for the buffer to read the file (Be aware to modify the contents of the buffer)
+```cpp
+    *buffer = new char[size];
+
+		PHYSFS_sint64 numBytesRead = PHYSFS_readBytes(file, *buffer, size);
+		if (numBytesRead == -1)
+			LOG("ERROR READING FROM FILEHANDLE: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+```
+
+TODO 6: Close the file when finished and return its number of bytes. If the reading process is successful (has finished) it means that the number of byes read is equal to the size of the file.
+```cpp
+		if (numBytesRead == size)
+		{
+			if (PHYSFS_close(file) == 0)
+				LOG("ERROR CLOSING FILEHANDLE: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+
+			return numBytesRead;
+		}
+		else
+		{
+			PHYSFS_close(file);
+			RELEASE_ARRAY(buffer);
+			return 0;
+		}
+```
+
+TODO 7: Load the texture using the SDL_RWops structure and close the allocated SDL_RWops structure
+```cpp
+	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
+	SDL_Surface* surface = IMG_Load_RW(rw, 0);
+  
+    SDL_RWclose(rw);
+````
+
+TODO 8: Repeat what we have done for the texture but with the sound effects and music
+```cpp
+	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
+	Mix_Chunk* chunk = Mix_LoadWAV_RW(rw, 0);
+  
+  	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
+	music = Mix_LoadMUS_RW(rw, 0);
+```
+
+TODO 9: Load a Font XML document using a buffer. Get the size and load the XML document. Then, release the buffer
+```cpp
+	char* buffer = nullptr;
+	pugi::xml_document xmlDocFontAtlas;
+	size_t size = app->assetsManager->LoadXML(rtpFontFile, &buffer);
+
+	pugi::xml_parse_result result = xmlDocFontAtlas.load_buffer(buffer, size);
+	RELEASE_ARRAY(buffer);
+```
+
 # Possible Improvements
 To improve this implementation, I have mainly found two ways:
 
-As PhysFS is focused on thread security, because it reads one file at a time, it increases loading times. As the game engine is capable of managing different thread of our CPU, with PhysFS only executing one operation at the same time makes it all slow down. However, we can identify this problem in more advanced and bigger-scale games. 
-This improvement was done by Mathieu Ropert, and he first worked to integrate PhysFS using C++ in his engine and use macros and gotos instead of the present RAII accessors. He also uses different mount points that are being managed by each thread.
+As PhysFS is focused on thread security, because it reads one file at a time, it increases loading times. As the game engine is capable of managing different threads of our CPU, with PhysFS only executing one operation at the same time makes it all slow down. However, we can identify this problem in more advanced and bigger-scale games. 
+This improvement was done by Mathieu Ropert, and he first worked to integrate PhysFS using C++ in his engine and use macros and gotos instead of the present RAII accessors. He also uses different mount points that are being managed by each thread. Here it is a conference of him explaining this improvement:
 
-The second improvement could be to add more encryption to the files using Crypto++ and then coding the decryption internally in our program. This will help to have better secured PAK files. The ZipStorage class from Digital Rune is intended to access package files that use the ZIP format and  manage the compression and encryption.
+<iframe width="560" height="315" src="https://youtu.be/TcuPIVKNSN0?t=1412" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+The second improvement could be to add more encryption to the files using [Crypto++](https://www.cryptopp.com) and then coding the decryption internally in our program. This will help to have better secured PAK files. The [ZipStorage](https://digitalrune.github.io/DigitalRune-Documentation/html/97e246e8-5bb5-020b-acbc-af2485ceccdf.htm) class from Digital Rune is intended to access package files that use the ZIP format and  manage the compression and encryption.
+
+## Problems Found
+- Not enough documentation from the library for beginners.
+- Deprecated and scarce information on forums, blogs and in the official weppage.
+- The Music files don't allow to do `SDL_RWclose()` for some reason.
+- The config file must be outside of the Assets archive. As far it is not a big issue, being loaded first by App is tricky.  
 
 # Documentation and References
+- https://icculus.org/physfs/
+- https://icculus.org/physfs/docs/html/
+- https://icculus.org/physfs/physfstut.txt
+- https://icculus.org/physfs/docs/html/physfs_8h.html
+- https://gamedev.stackexchange.com/questions/37820/how-do-you-set-up-physfs-for-use-in-a-game
+- https://pugixml.org/docs/manual.html#loading.memory
+- https://wiki.libsdl.org/SDL_RWops
+- https://gamedev.net/forums/topic/532838-using-physfs-with-sdl/4445176/
+- https://www.youtube.com/watch?v=hwx3C18eQwc&t=8s
+- https://stackoverflow.com/questions/20589045/modify-buffer-passed-as-a-pointer
+- https://en.wikipedia.org/wiki/File_system
+- https://en.wikipedia.org/wiki/File_system_API
+- https://www.randygaul.net/2019/03/20/virtual-file-systems-in-games/
+- https://simoncoenen.com/blog/programming/PakFiles
+- https://mropert.github.io/2020/07/26/threading_with_physfs/
+- https://digitalrune.github.io/DigitalRune-Documentation/html/120bed13-f23b-4774-bae7-d64d410d2122.htm
+- https://www.youtube.com/watch?v=TcuPIVKNSN0
