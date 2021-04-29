@@ -1,3 +1,7 @@
+# Relevant Links
+- [Project's Repository](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS)
+- [Build published in the Release to download as zip](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/releases/tag/v1.0)
+
 # Introduction
 In a general perspective, a file system also called filesystem or just fs, is the structure and logic norms used to manage groups of data. This system controls how data is stored and read, this way the different groups of information in a disk, drive or RAM have a determined location, size and name; and therefore they are usable for programs. Each of these groups of data is called a file.
 
