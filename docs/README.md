@@ -79,18 +79,18 @@ As a result, in this project I have implemented a Module called AssetsManager th
 The method used to load our assets needs the path of the asset from the ZIP file, so it will be something like: Textures/image.png or Audio/Fx/jump.wav
 It returns a SDL_RWops pointer structure to be able to load our asset from SDL in the Textures or Audio modules.
 ```cpp
-	SDL_RWops* LoadAsset(const char* path);
+SDL_RWops* LoadAsset(const char* path);
 ```
 
 The method used to load an XML file is a bit more complex. It needs as a parameter a path (like in `LoadAsset()`) and a buffer that must be able to be modified, so we need a [double pointer](https://stackoverflow.com/questions/20589045/modify-buffer-passed-as-a-pointer) to read the XML file and save the data into the buffer. 
 It returns the size of the file in bytes.
 ```cpp
-		size_t LoadXML(const char* path, char** buffer);
+size_t LoadXML(const char* path, char** buffer);
 ```
 
 As a try to encryption, the archive that contains and compresses the assets instead of being a ZIP file, I have renamed it to Assets.pak to avoid all the users that don't know about PAK files to change any of our games assets. This can be reverted by changing again the extension to .zip.
 
-![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/assets_archive.jpg0
+![](https://github.com/yeraytm/Assets-ZIP-Manager-PhysFS/blob/master/docs/images/assets_archive.jpg)
 
 Following the PhysicsFS documentation and some information to load from memory, here they are the used functions and code:
 
@@ -200,38 +200,36 @@ TODO 6: Close the file when finished and return its number of bytes. If the read
 
 TODO 7: Load the texture using the SDL_RWops structure and close the allocated SDL_RWops structure
 ```cpp
-	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	SDL_Surface* surface = IMG_Load_RW(rw, 0);
+SDL_RWops* rw = app->assetsManager->LoadAsset(path);
+SDL_Surface* surface = IMG_Load_RW(rw, 0);
   
-    SDL_RWclose(rw);
+SDL_RWclose(rw);
 ````
 
 TODO 8: Repeat what we have done for the texture but with the sound effects and music
 ```cpp
-	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	Mix_Chunk* chunk = Mix_LoadWAV_RW(rw, 0);
+SDL_RWops* rw = app->assetsManager->LoadAsset(path);
+Mix_Chunk* chunk = Mix_LoadWAV_RW(rw, 0);
   
-  	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	music = Mix_LoadMUS_RW(rw, 0);
+SDL_RWops* rw = app->assetsManager->LoadAsset(path);
+music = Mix_LoadMUS_RW(rw, 0);
 ```
 
 TODO 9: Load a Font XML document using a buffer. Get the size and load the XML document. Then, release the buffer
 ```cpp
-	char* buffer = nullptr;
-	pugi::xml_document xmlDocFontAtlas;
-	size_t size = app->assetsManager->LoadXML(rtpFontFile, &buffer);
+char* buffer = nullptr;
+pugi::xml_document xmlDocFontAtlas;
+size_t size = app->assetsManager->LoadXML(rtpFontFile, &buffer);
 
-	pugi::xml_parse_result result = xmlDocFontAtlas.load_buffer(buffer, size);
-	RELEASE_ARRAY(buffer);
+pugi::xml_parse_result result = xmlDocFontAtlas.load_buffer(buffer, size);
+RELEASE_ARRAY(buffer);
 ```
 
 # Possible Improvements
 To improve this implementation, I have mainly found two ways:
 
 As PhysFS is focused on thread security, because it reads one file at a time, it increases loading times. As the game engine is capable of managing different threads of our CPU, with PhysFS only executing one operation at the same time makes it all slow down. However, we can identify this problem in more advanced and bigger-scale games. 
-This improvement was done by Mathieu Ropert, and he first worked to integrate PhysFS using C++ in his engine and use macros and gotos instead of the present RAII accessors. He also uses different mount points that are being managed by each thread. Here it is a conference of him explaining this improvement:
-
-<iframe width="560" height="315" src="https://youtu.be/TcuPIVKNSN0?t=1412" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+This improvement was done by Mathieu Ropert, and he first worked to integrate PhysFS using C++ in his engine and use macros and gotos instead of the present RAII accessors. He also uses different mount points that are being managed by each thread. [Here](https://youtu.be/TcuPIVKNSN0?t=1412) it is a conference of him explaining this improvement.
 
 The second improvement could be to add more encryption to the files using [Crypto++](https://www.cryptopp.com) and then coding the decryption internally in our program. This will help to have better secured PAK files. The [ZipStorage](https://digitalrune.github.io/DigitalRune-Documentation/html/97e246e8-5bb5-020b-acbc-af2485ceccdf.htm) class from Digital Rune is intended to access package files that use the ZIP format and  manage the compression and encryption.
 
