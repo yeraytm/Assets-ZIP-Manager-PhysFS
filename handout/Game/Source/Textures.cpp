@@ -68,8 +68,7 @@ SDL_Texture* const Textures::Load(const char* path)
 	SDL_Texture* texture = NULL;
 
 	// (SOLVED) TODO 7: Load the texture using the SDL_RWops structure
-	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	SDL_Surface* surface = IMG_Load_RW(rw, 0);
+	SDL_Surface* surface = IMG_Load(path);
 
 	if(surface == NULL)
 	{
@@ -81,8 +80,7 @@ SDL_Texture* const Textures::Load(const char* path)
 		SDL_FreeSurface(surface);
 	}
 
-	// (SOLVED) TODO 7: Close the allocated SDL_RWops structure
-	SDL_RWclose(rw);
+	// TODO 7: Close the allocated SDL_RWops structure
 
 	return texture;
 }

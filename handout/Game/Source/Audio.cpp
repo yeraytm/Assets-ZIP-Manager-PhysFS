@@ -109,8 +109,7 @@ bool Audio::PlayMusic(const char* path, float fadeTime)
 	}
 
 	// (SOLVED) TODO 8: Repeat what we have done for the texture but with the music but you don't have to close the SDL_RWops structure
-	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	music = Mix_LoadMUS_RW(rw, 0);
+	music = Mix_LoadMUS(path);
 
 	if(music == NULL)
 	{
@@ -151,8 +150,7 @@ unsigned int Audio::LoadFx(const char* path)
 		return 0;
 
 	// (SOLVED) TODO 8: Repeat what we have done for the texture but with the sound effects
-	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	Mix_Chunk* chunk = Mix_LoadWAV_RW(rw, 0);
+	Mix_Chunk* chunk = Mix_LoadWAV(path);
 
 	if(chunk == NULL)
 	{
@@ -165,7 +163,6 @@ unsigned int Audio::LoadFx(const char* path)
 	}
 
 	// (SOLVED) TODO 8: Remember to close the allocated SDL_RWops structure
-	SDL_RWclose(rw);
 
 	return ret;
 }
