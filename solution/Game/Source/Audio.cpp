@@ -16,6 +16,7 @@
 Audio::Audio() : Module()
 {
 	music = NULL;
+	rwMusic = NULL;
 	name.Create("audio");
 }
 
@@ -109,8 +110,8 @@ bool Audio::PlayMusic(const char* path, float fadeTime)
 	}
 
 	// (SOLVED) TODO 8: Repeat what we have done for the texture but with the music but you don't have to close the SDL_RWops structure
-	SDL_RWops* rw = app->assetsManager->LoadAsset(path);
-	music = Mix_LoadMUS_RW(rw, 0);
+	rwMusic = app->assetsManager->LoadAsset(path);
+	music = Mix_LoadMUS_RW(rwMusic, 0);
 
 	if(music == NULL)
 	{
@@ -184,4 +185,17 @@ bool Audio::PlayFx(unsigned int id, int repeat)
 	}
 
 	return ret;
+}
+
+bool Audio::StopMusic()
+{
+	SDL_RWclose(rwMusic);
+	rwMusic = nullptr;
+
+	Mix_FreeMusic(music);
+	music = nullptr;
+
+	Mix_HaltMusic();
+
+	return true;
 }

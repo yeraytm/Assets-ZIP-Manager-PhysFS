@@ -58,6 +58,16 @@ bool Scene::Update(float dt)
 		app->audio->PlayFx(sFx);
 	}
 
+	if (app->input->GetKey(SDL_SCANCODE_P) == KEY_DOWN)
+	{
+		app->audio->StopMusic();
+	}
+
+	if (app->input->GetKey(SDL_SCANCODE_R) == KEY_DOWN)
+	{
+		app->audio->PlayMusic("Audio/Music/music_spy.ogg");
+	}
+
 	app->render->DrawText(font, "Press SPACE to play a sound effect", 10, 50, 40, 5, { 255,255,255,255 });
 
 	app->render->DrawTexture(img, 240, 0);

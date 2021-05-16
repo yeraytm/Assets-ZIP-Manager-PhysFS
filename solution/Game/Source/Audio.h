@@ -7,6 +7,7 @@
 
 struct _Mix_Music;
 struct Mix_Chunk;
+struct SDL_RWops;
 
 class Audio : public Module
 {
@@ -32,8 +33,11 @@ public:
 	// Play a previously loaded WAV
 	bool PlayFx(unsigned int fx, int repeat = 0);
 
+	bool StopMusic();
+
 private:
 
+	SDL_RWops* rwMusic;
 	_Mix_Music* music;
 	List<Mix_Chunk *>	fx;
 };
